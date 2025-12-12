@@ -23,30 +23,39 @@ export default async function HealthCheckPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-col items-center gap-6 px-16 py-32 text-center">
-        <h1 className="text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-          Health Check
-        </h1>
-        {error ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-lg text-red-600 dark:text-red-400">
-              Error: {error}
-            </p>
-            <p className="text-base text-zinc-600 dark:text-zinc-400">
-              The health check endpoint could not be reached.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <p className="text-lg text-green-600 dark:text-green-400">
-              Status: {status}
-            </p>
-            <p className="text-base text-zinc-600 dark:text-zinc-400">
-              The API is responding correctly.
-            </p>
-          </div>
-        )}
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black p-4">
+      <main className="w-full max-w-md">
+        <div className="rounded-lg border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h1 className="mb-2 text-2xl font-semibold text-black dark:text-zinc-50">
+            Application Health Check
+          </h1>
+          <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+            Check the current status of the application API endpoint.
+          </p>
+          {error ? (
+            <div className="flex flex-col gap-3">
+              <div className="inline-flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 dark:bg-red-950/20">
+                <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                  Error: {error}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                The health check endpoint could not be reached.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="inline-flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 dark:bg-green-950/20">
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                  Status: {status}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                The API is responding correctly.
+              </p>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
