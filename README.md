@@ -1,5 +1,7 @@
 # Prompting Playbook
 
+> **Note:** This project is currently in a planning/scaffolding phase. Not all components described in this README exist yet. The README outlines the intended direction, architecture, and goals for this repository.
+
 A curated collection of notes, templates, and best practices for learning AI prompting, LLM reasoning patterns, and real-world AI engineering workflows.
 
 This playbook tracks my progress through a structured AI Engineering curriculum focused on:
