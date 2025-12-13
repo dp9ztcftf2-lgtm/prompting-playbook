@@ -38,11 +38,8 @@ export default function EntryForm() {
         throw new Error(data.error || "Failed to create entry.");
       }
 
-      // Clear form
       setTitle("");
       setContent("");
-
-      // Refresh server data on the page
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error.");
@@ -52,11 +49,16 @@ export default function EntryForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 border p-4 rounded-lg">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
+    >
       <div>
-        <label className="block text-sm font-medium mb-1">Title</label>
+        <label className="block text-sm font-medium mb-1 text-slate-900">
+          Title
+        </label>
         <input
-          className="w-full border rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Short name for this prompt pattern"
@@ -64,9 +66,11 @@ export default function EntryForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Content</label>
+        <label className="block text-sm font-medium mb-1 text-slate-900">
+          Content
+        </label>
         <textarea
-          className="w-full border rounded px-3 py-2 text-sm min-h-[100px]"
+          className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-900 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Details, example prompts, notes..."
@@ -77,7 +81,7 @@ export default function EntryForm() {
 
       <button
         type="submit"
-        className="px-4 py-2 rounded-md text-sm font-medium border"
+        className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-slate-900 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-70"
         disabled={submitting}
       >
         {submitting ? "Saving..." : "Add entry"}
