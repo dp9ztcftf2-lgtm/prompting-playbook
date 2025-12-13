@@ -2,6 +2,10 @@ import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import EntryForm from "./EntryForm";
+import DeleteEntryButton from "./DeleteEntryButton";
+import EditEntryForm from "./EditEntryForm";
+import EditEntryInline from "./EditEntryInline";
+
 
 async function getEntries() {
   return db
@@ -16,13 +20,18 @@ export default async function EntriesPage() {
   return (
     <main className="min-h-screen bg-slate-100">
       <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
-        <header className="space-y-2 border-b pb-4">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Prompting Playbook
-          </h1>
+        <header className="space-y-2 border-b pb-4 flex flex-col gap-2">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 text-center">
+              Prompting Playbook
+            </h1>
+            <span className="text-xs px-2 py-1 rounded-full bg-slate-900 text-white">
+              Entries
+            </span>
+          </div>
           <p className="text-sm text-slate-800">
-            Store and refine your best prompts, patterns, and notes. Everything
-            here is persisted in Neon via Drizzle.
+            Store and refine your best prompts, patterns, and notes. Everything here is
+            persisted in Neon via Drizzle.
           </p>
         </header>
 
@@ -57,9 +66,16 @@ export default async function EntriesPage() {
                       {new Date(entry.createdAt).toLocaleString()}
                     </span>
                   </div>
+
                   <p className="text-sm text-slate-900 whitespace-pre-wrap">
                     {entry.content}
                   </p>
+
+                  <div className="flex justify-end gap-4">
+                    <EditEntryInline entry={entry} />
+                    <DeleteEntryButton id={entry.id} />
+                  </div>
+
                 </li>
               ))}
             </ul>
