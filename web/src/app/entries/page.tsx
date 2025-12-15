@@ -1,9 +1,8 @@
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { EntryForm } from "@/components/entries/EntryForm";
 import { EntriesClient } from "./ui/EntriesClient";
-import { db } from "@/src/db";
-import { entries } from "@/src/db/schema";
+import { db } from "@/db/client";
+import { entries } from "@/db/schema";
 import { desc } from "drizzle-orm";
 
 export default async function EntriesPage() {
