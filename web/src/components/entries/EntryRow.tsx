@@ -7,8 +7,8 @@ export type Entry = {
   id: number;
   title: string;
   content: string | null;
-  createdAt?: string; // optional depending on your API
-  created_at?: string; // optional depending on your API
+  createdAt?: string | Date; // optional depending on your API
+  created_at?: string | Date; // optional depending on your API
 };
 
 export function EntryRow({
@@ -21,10 +21,12 @@ export function EntryRow({
   const created = useMemo(() => {
     const raw = entry.createdAt ?? entry.created_at;
     if (!raw) return null;
-    const d = new Date(raw);
+  
+    const d = raw instanceof Date ? raw : new Date(raw);
     if (Number.isNaN(d.getTime())) return null;
+  
     return d.toLocaleString();
-  }, [entry.createdAt, entry.created_at]);
+  }, [entry.createdAt, entry.created_at]);  
 
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(entry.title ?? "");
@@ -68,8 +70,9 @@ export function EntryRow({
       setIsEditing(false);
       onChanged?.();
 
-    } catch (err: any) {
-      setError(err?.message ?? "Something went wrong.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
     } finally {
       setIsSaving(false);
     }
@@ -83,8 +86,9 @@ export function EntryRow({
       await deleteEntryAction({ id: entry.id });
       onChanged?.();
 
-    } catch (err: any) {
-      setError(err?.message ?? "Something went wrong.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
     } finally {
       setIsDeleting(false);
     }

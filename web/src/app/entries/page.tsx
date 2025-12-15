@@ -4,9 +4,10 @@ import { EntriesClient } from "./ui/EntriesClient";
 import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { desc } from "drizzle-orm";
+import type { Entry } from "@/db/schema";
 
 export default async function EntriesPage() {
-  const rows = await db
+  const rows:  Entry[] = await db
     .select()
     .from(entries)
     .orderBy(desc(entries.createdAt));
@@ -23,7 +24,7 @@ export default async function EntriesPage() {
           <div className="text-sm font-medium text-slate-900">New entry</div>
         </CardHeader>
         <CardContent>
-          <EntriesClient initialEntries={rows as any} />
+          <EntriesClient initialEntries={rows} />
         </CardContent>
       </Card>
 

@@ -31,8 +31,9 @@ export function EntryForm({ onCreated }: { onCreated?: () => void }) {
       setTitle("");
       setContent("");
       onCreated?.();
-    } catch (err: any) {
-      setError(err?.message ?? "Something went wrong.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
     } finally {
       setIsSaving(false);
     }
