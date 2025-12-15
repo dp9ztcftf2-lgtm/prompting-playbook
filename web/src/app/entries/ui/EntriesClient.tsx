@@ -17,7 +17,10 @@ export function EntriesClient({ initialEntries }: { initialEntries: Entry[] }) {
       <EntryForm onCreated={refresh} />
 
       <div className="space-y-2">
-        <div className="text-sm font-medium text-slate-900">All entries</div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-medium text-slate-900">All entries</div>
+          <div className="text-xs text-slate-500">{initialEntries.length} total</div>
+        </div>
         <EntriesList entries={initialEntries} onChanged={refresh} />
       </div>
     </div>

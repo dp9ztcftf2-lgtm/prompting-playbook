@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createEntryAction } from "@/app/entries/actions";
 
 export function EntryForm({ onCreated }: { onCreated?: () => void }) {
   const [title, setTitle] = useState("");
@@ -22,17 +23,11 @@ export function EntryForm({ onCreated }: { onCreated?: () => void }) {
 
     setIsSaving(true);
     try {
-      const res = await fetch("/api/entries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: trimmedTitle, content: trimmedContent }),
+      await createEntryAction({
+        title: trimmedTitle,
+        content: trimmedContent,
       });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to create entry.");
-      }
-
+   
       setTitle("");
       setContent("");
       onCreated?.();

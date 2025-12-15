@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { deleteEntryAction, updateEntryAction } from "@/app/entries/actions";
 
 export type Entry = {
   id: number;
@@ -58,22 +59,15 @@ export function EntryRow({
 
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/entries/${entry.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: trimmedTitle,
-          content: trimmedContent,
-        }),
+      await updateEntryAction({
+        id: entry.id,
+        title: trimmedTitle,
+        content: trimmedContent,
       });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to update entry.");
-      }
 
       setIsEditing(false);
       onChanged?.();
+
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong.");
     } finally {
@@ -86,16 +80,9 @@ export function EntryRow({
     setIsDeleting(true);
 
     try {
-      const res = await fetch(`/api/entries/${entry.id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to delete entry.");
-      }
-
+      await deleteEntryAction({ id: entry.id });
       onChanged?.();
+
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong.");
     } finally {

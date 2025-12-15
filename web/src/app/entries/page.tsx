@@ -27,9 +27,6 @@ export default async function EntriesPage() {
         </CardContent>
       </Card>
 
-      <div className="space-y-3">
-        {/* list is rendered in client wrapper so it can refresh */}
-      </div>
     </div>
   );
 }
