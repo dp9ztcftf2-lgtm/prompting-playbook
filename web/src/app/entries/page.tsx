@@ -1,33 +1,19 @@
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { EntriesClient } from "./ui/EntriesClient";
-import { db } from "@/db/client";
-import { entries } from "@/db/schema";
-import { desc } from "drizzle-orm";
-import type { Entry } from "@/db/schema";
+// app/entries/page.tsx
+import EntriesPage from "./ui/EntriesPage";
 
-export default async function EntriesPage() {
-  const rows:  Entry[] = await db
-    .select()
-    .from(entries)
-    .orderBy(desc(entries.createdAt));
+type SearchParams = {
+  q?: string | string[];
+};
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Entries"
-        subtitle="Create, edit inline, and delete entries (DB-backed)."
-      />
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams> | SearchParams;
+}) {
+  const sp = (await searchParams) as SearchParams;
 
-      <Card>
-        <CardHeader>
-          <div className="text-sm font-medium text-slate-900">New entry</div>
-        </CardHeader>
-        <CardContent>
-          <EntriesClient initialEntries={rows} />
-        </CardContent>
-      </Card>
+  const raw = Array.isArray(sp.q) ? sp.q[0] : sp.q;
+  const q = raw?.trim() ? raw.trim() : undefined;
 
-    </div>
-  );
+  return <EntriesPage initialQuery={q ?? ""} />;
 }
