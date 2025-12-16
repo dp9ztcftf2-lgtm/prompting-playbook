@@ -5,6 +5,7 @@ export const entries = pgTable("entries", {
   title: text("title").notNull(),
   content: text("content"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 export type Entry = typeof entries.$inferSelect;
 export type NewEntry = typeof entries.$inferInsert;

@@ -3,6 +3,7 @@ import EntriesPage from "./ui/EntriesPage";
 
 type SearchParams = {
   q?: string | string[];
+  sort?: string | string[];
 };
 
 export default async function Page({
@@ -12,8 +13,11 @@ export default async function Page({
 }) {
   const sp = (await searchParams) as SearchParams;
 
-  const raw = Array.isArray(sp.q) ? sp.q[0] : sp.q;
-  const q = raw?.trim() ? raw.trim() : undefined;
+  const rawQ = Array.isArray(sp.q) ? sp.q[0] : sp.q;
+  const q = rawQ?.trim() ? rawQ.trim() : undefined;
 
-  return <EntriesPage initialQuery={q ?? ""} />;
+  const rawSort = Array.isArray(sp.sort) ? sp.sort[0] : sp.sort;
+  const sort = rawSort === "updated" ? "updated" : "created";
+
+  return <EntriesPage initialQuery={q ?? ""} sort={sort} />;
 }

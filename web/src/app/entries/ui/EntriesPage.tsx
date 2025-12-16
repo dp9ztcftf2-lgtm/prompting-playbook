@@ -10,24 +10,27 @@ import type { Entry } from "@/db/schema";
 
 export default async function EntriesPage({
   initialQuery,
+  sort,
 }: {
   initialQuery: string;
+  sort: "created" | "updated";
 }) {
+
   // 🔹 Server read belongs here
   const q = initialQuery.trim();
+
+  const orderByCol = sort === "updated" ? entries.updatedAt : entries.createdAt;
 
   const rows: Entry[] = await db
     .select()
     .from(entries)
     .where(
       q
-        ? or(
-            ilike(entries.title, `%${q}%`),
-            ilike(entries.content, `%${q}%`)
-          )
+        ? or(ilike(entries.title, `%${q}%`), ilike(entries.content, `%${q}%`))
         : undefined
     )
-    .orderBy(desc(entries.createdAt));  
+    .orderBy(desc(orderByCol));
+  
 
   return (
     <div className="space-y-6">

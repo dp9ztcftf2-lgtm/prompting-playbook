@@ -20,6 +20,7 @@ export async function createEntryAction(input: {
   await db.insert(entries).values({
     title,
     content,
+    updatedAt: new Date(),
   });
 
   revalidatePath("/entries");
@@ -47,6 +48,7 @@ export async function updateEntryAction(input: {
     .set({
       title,
       content,
+      updatedAt: new Date(),
     })
     .where(eq(entries.id, id));
 

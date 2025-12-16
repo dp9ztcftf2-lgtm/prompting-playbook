@@ -15,6 +15,13 @@
       "when": 1765834505750,
       "tag": "0001_mighty_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765914673486,
+      "tag": "0002_large_captain_midlands",
+      "breakpoints": true
     }
   ]
 }

@@ -17,8 +17,13 @@ export function EntriesClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const currentSort =
+    searchParams.get("sort") === "updated" ? "updated" : "created";
 
   const [query, setQuery] = useState(initialQuery);
+  const trimmed = initialQuery.trim();
+  const isSearching = trimmed.length > 0;
 
   // Keep input in sync if user navigates back/forward or arrives via deep link
   useEffect(() => {
@@ -33,19 +38,26 @@ export function EntriesClient({
   useEffect(() => {
     const handle = setTimeout(() => {
       const next = query.trim();
-
-      // Preserve other query params (if any)
-      const params = new URLSearchParams(searchParams.toString());
-
+  
+      const params = new URLSearchParams(searchParamsString);
+  
       if (next.length === 0) params.delete("q");
       else params.set("q", next);
-
+  
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname);
+      const nextUrl = qs ? `${pathname}?${qs}` : pathname;
+  
+      const currentUrl = searchParamsString
+        ? `${pathname}?${searchParamsString}`
+        : pathname;
+  
+      if (nextUrl !== currentUrl) {
+        router.replace(nextUrl, { scroll: false });
+      }
     }, 300);
-
+  
     return () => clearTimeout(handle);
-  }, [query, pathname, router, searchParams]);
+  }, [query, pathname, router, searchParamsString]);  
 
   const placeholder = useMemo(() => "Search title or content…", []);
 
@@ -67,14 +79,59 @@ export function EntriesClient({
         </div>
       </div>
 
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-900" htmlFor="entries-sort">
+          Sort
+        </label>
+        <select
+          id="entries-sort"
+          value={currentSort}
+          onChange={(e) => {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("sort", e.target.value);
+            const qs = params.toString();
+            router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+          }}
+          className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+        >
+          <option value="created">Created (newest first)</option>
+          <option value="updated">Updated (newest first)</option>
+        </select>
+      </div>
+
+
       <EntryForm onCreated={refresh} />
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-medium text-slate-900">All entries</div>
-          <div className="text-xs text-slate-500">{initialEntries.length} total</div>
+          <div className="text-sm font-medium text-slate-900">
+            {isSearching ? "Search results" : "All entries"}
+          </div>
+
+          <div className="text-xs text-slate-500">
+            {initialEntries.length} {isSearching ? "results" : "total"}
+            {isSearching ? (
+              <>
+                {" "}
+                for <span className="font-medium text-slate-700">“{trimmed}”</span>
+              </>
+            ) : null}
+          </div>
         </div>
-        <EntriesList entries={initialEntries} onChanged={refresh} />
+        {initialEntries.length === 0 ? (
+          <div className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600">
+            {isSearching ? (
+              <>
+                No results for <span className="font-medium">“{trimmed}”</span>. Try a
+                different term or clear search.
+              </>
+            ) : (
+              <>No entries yet. Create your first entry above.</>
+            )}
+          </div>
+        ) : (
+          <EntriesList entries={initialEntries} onChanged={refresh} />
+        )}
       </div>
     </div>
   );
