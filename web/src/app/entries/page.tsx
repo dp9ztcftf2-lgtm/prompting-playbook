@@ -4,6 +4,7 @@ import EntriesPage from "./ui/EntriesPage";
 type SearchParams = {
   q?: string | string[];
   sort?: string | string[];
+  page?: string | string[];
 };
 
 export default async function Page({
@@ -19,5 +20,12 @@ export default async function Page({
   const rawSort = Array.isArray(sp.sort) ? sp.sort[0] : sp.sort;
   const sort = rawSort === "updated" ? "updated" : "created";
 
-  return <EntriesPage initialQuery={q ?? ""} sort={sort} />;
+  const rawPage = Array.isArray(sp.page) ? sp.page[0] : sp.page;
+
+  const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1);
+
+
+  //  return <EntriesPage initialQuery={q ?? ""} sort={sort} />;
+  return <EntriesPage q={q} sort={sort} page={page} />;
+
 }

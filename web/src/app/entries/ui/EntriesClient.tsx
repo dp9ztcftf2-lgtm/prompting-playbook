@@ -10,16 +10,25 @@ import type { Entry } from "@/components/entries/EntryRow";
 export function EntriesClient({
   initialEntries,
   initialQuery,
+  sort,
+  page,
+  totalCount,
+  pageCount,
 }: {
   initialEntries: Entry[];
   initialQuery: string;
+  sort: "created" | "updated";
+  page: number;
+  totalCount: number;
+  pageCount: number;
 }) {
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const currentSort =
-    searchParams.get("sort") === "updated" ? "updated" : "created";
+  const currentSort = sort;
+
 
   const [query, setQuery] = useState(initialQuery);
   const trimmed = initialQuery.trim();
@@ -38,26 +47,52 @@ export function EntriesClient({
   useEffect(() => {
     const handle = setTimeout(() => {
       const next = query.trim();
-  
+
       const params = new URLSearchParams(searchParamsString);
-  
-      if (next.length === 0) params.delete("q");
-      else params.set("q", next);
-  
+
+      // Current q in the URL (normalized to "")
+      const currentQ = (params.get("q") ?? "").trim();
+
+      // Compute what q *would* be after this change
+      const nextQ = next;
+
+      // Apply q update
+      if (nextQ.length === 0) params.delete("q");
+      else params.set("q", nextQ);
+
+      // Only reset pagination if q actually changed
+      if (currentQ !== nextQ) {
+        params.set("page", "1");
+      }
+
       const qs = params.toString();
       const nextUrl = qs ? `${pathname}?${qs}` : pathname;
-  
+
       const currentUrl = searchParamsString
         ? `${pathname}?${searchParamsString}`
         : pathname;
-  
+
       if (nextUrl !== currentUrl) {
         router.replace(nextUrl, { scroll: false });
       }
     }, 300);
-  
+
     return () => clearTimeout(handle);
-  }, [query, pathname, router, searchParamsString]);  
+  }, [query, pathname, router, searchParamsString]);
+
+  // Keep URL page in sync if server clamps page (e.g., deep link page=999)
+  useEffect(() => {
+    const params = new URLSearchParams(searchParamsString);
+    const currentPage = params.get("page") ?? "1";
+    const nextPage = String(page);
+
+    if (currentPage !== nextPage) {
+      params.set("page", nextPage);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }
+  }, [page, pathname, router, searchParamsString]);
+
 
   const placeholder = useMemo(() => "Search title or content…", []);
 
@@ -87,8 +122,10 @@ export function EntriesClient({
           id="entries-sort"
           value={currentSort}
           onChange={(e) => {
+            const nextSort = e.target.value === "updated" ? "updated" : "created";
             const params = new URLSearchParams(searchParams.toString());
-            params.set("sort", e.target.value);
+            params.set("sort", nextSort);
+            params.set("page", "1");
             const qs = params.toString();
             router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
           }}
@@ -109,14 +146,21 @@ export function EntriesClient({
           </div>
 
           <div className="text-xs text-slate-500">
-            {initialEntries.length} {isSearching ? "results" : "total"}
+            {totalCount} {isSearching ? "results" : "total"}
             {isSearching ? (
               <>
                 {" "}
                 for <span className="font-medium text-slate-700">“{trimmed}”</span>
               </>
             ) : null}
+            {pageCount > 1 ? (
+              <>
+                {" "}
+                · showing {initialEntries.length} on this page (page {page} of {pageCount})
+              </>
+            ) : null}
           </div>
+
         </div>
         {initialEntries.length === 0 ? (
           <div className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600">
