@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { deleteEntryAction, updateEntryAction } from "@/app/entries/actions";
+import Link from "next/link";
 
 export type Entry = {
   id: number;
@@ -21,12 +22,12 @@ export function EntryRow({
   const created = useMemo(() => {
     const raw = entry.createdAt ?? entry.created_at;
     if (!raw) return null;
-  
+
     const d = raw instanceof Date ? raw : new Date(raw);
     if (Number.isNaN(d.getTime())) return null;
-  
+
     return d.toLocaleString();
-  }, [entry.createdAt, entry.created_at]);  
+  }, [entry.createdAt, entry.created_at]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(entry.title ?? "");
@@ -102,7 +103,12 @@ export function EntryRow({
             <>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-medium text-slate-900 truncate">
-                  {entry.title}
+                  <Link
+                    href={`/entries/${entry.id}`}
+                    className="hover:underline underline-offset-4"
+                  >
+                    {entry.title}
+                  </Link>
                 </h3>
                 {created ? (
                   <span className="text-xs text-slate-500">· {created}</span>
