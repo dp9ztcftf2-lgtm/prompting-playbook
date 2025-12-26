@@ -4,15 +4,33 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { openai } from "@/lib/openai";
 
 
-function makeStubSummary(input: { title: string; content: string | null }) {
-  const base = ((input.content ?? "").trim() || input.title.trim()).replace(
-    /\s+/g,
-    " "
-  );
-  if (!base) return "No content to summarize.";
-  return base.slice(0, 240).trim();
+async function generateConciseSummary(input: { title: string; content: string | null }) {
+  const title = (input.title ?? "").trim();
+  const content = (input.content ?? "").trim();
+
+  const source = content || title;
+  if (!source) return "No content to summarize.";
+
+  const resp = await openai.responses.create({
+    model: "gpt-5",
+    reasoning: { effort: "low" },
+    input: [
+      {
+        role: "system",
+        content:
+          "You summarize user-written notes. Return a concise summary of 2–3 sentences. No bullet points. No prefacing.",
+      },
+      {
+        role: "user",
+        content: `Title: ${title}\n\nContent:\n${content}`,
+      },
+    ],
+  });
+
+  return resp.output_text.trim();
 }
 
 export async function generateEntrySummaryAction(input: { id: number }) {
@@ -36,10 +54,10 @@ export async function generateEntrySummaryAction(input: { id: number }) {
     throw new Error("Entry not found.");
   }
 
-  const summary = makeStubSummary({
+  const summary = await generateConciseSummary({
     title: entry.title ?? "",
     content: entry.content ?? null,
-  });
+  });  
 
   await db
     .update(entries)
