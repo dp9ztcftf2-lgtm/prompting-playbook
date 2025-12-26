@@ -22,6 +22,13 @@
       "when": 1765914673486,
       "tag": "0002_large_captain_midlands",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766527094306,
+      "tag": "0003_absurd_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

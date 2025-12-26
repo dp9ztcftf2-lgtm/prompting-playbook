@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { GenerateSummaryButton } from "../ui/GenerateSummaryButton";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -21,7 +22,17 @@ export default async function EntryDetailPage(props: PageProps) {
 
   const row = await db.query.entries.findFirst({
     where: eq(entries.id, id),
+    columns: {
+      id: true,
+      title: true,
+      content: true,
+      createdAt: true,
+      updatedAt: true,
+      summary: true,
+      summaryUpdatedAt: true,
+    },
   });
+  
 
   if (!row) notFound();
 
@@ -41,10 +52,50 @@ export default async function EntryDetailPage(props: PageProps) {
       </div>
 
       {row.content ? (
-        <div className="whitespace-pre-wrap rounded-lg border p-4">{row.content}</div>
+        <div className="whitespace-pre-wrap rounded-lg border p-4">
+          {row.content}
+        </div>
       ) : (
-        <div className="rounded-lg border p-4 text-sm text-slate-500">No content.</div>
+        <div className="rounded-lg border p-4 text-sm text-slate-500">
+          No content.
+        </div>
       )}
+
+      {/* Summary */}
+      <section className="rounded-lg border p-4 space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">Summary</h2>
+          <GenerateSummaryButton id={row.id} />
+        </div>
+
+        {row.summary ? (
+          <>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">
+              {row.summary}
+            </p>
+            {row.summaryUpdatedAt ? (
+              <p className="text-xs text-slate-500">
+                Updated {new Date(row.summaryUpdatedAt).toLocaleString()}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-sm text-slate-500">No summary yet.</p>
+        )}
+      </section>
+
+      {/* Created / Updated */}
+      <div className="grid gap-2 text-sm text-slate-600">
+        <div>
+          <span className="font-medium text-slate-900">Created:</span>{" "}
+          {new Date(row.createdAt).toLocaleString()}
+        </div>
+        <div>
+          <span className="font-medium text-slate-900">Updated:</span>{" "}
+          {new Date(row.updatedAt).toLocaleString()}
+        </div>
+      </div>
+
 
       <div className="grid gap-2 text-sm text-slate-600">
         <div>

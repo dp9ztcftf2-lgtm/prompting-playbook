@@ -7,7 +7,6 @@ import { EntriesClient } from "./EntriesClient";
 import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { desc, ilike, or, sql } from "drizzle-orm";
-import type { Entry } from "@/db/schema";
 
 const PAGE_SIZE = 5;
 
@@ -48,13 +47,22 @@ export default async function EntriesPage(props: {
   const orderByCol = sort === "updated" ? entries.updatedAt : entries.createdAt;
 
   // 2) fetch just the current page
-  const rows: Entry[] = await db
-    .select()
-    .from(entries)
-    .where(whereClause)
-    .orderBy(desc(orderByCol))
-    .limit(PAGE_SIZE)
-    .offset(offset);
+  const rows = await db
+  .select({
+    id: entries.id,
+    title: entries.title,
+    content: entries.content,
+    createdAt: entries.createdAt,
+    updatedAt: entries.updatedAt,
+    summary: entries.summary,
+    summaryUpdatedAt: entries.summaryUpdatedAt,
+  })
+  .from(entries)
+  .where(whereClause)
+  .orderBy(desc(orderByCol))
+  .limit(PAGE_SIZE)
+  .offset(offset);
+
 
   const resultsLabel = q
     ? `${totalCount} result${totalCount === 1 ? "" : "s"} for “${q}”`

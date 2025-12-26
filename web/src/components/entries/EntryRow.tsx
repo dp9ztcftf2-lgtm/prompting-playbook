@@ -8,8 +8,10 @@ export type Entry = {
   id: number;
   title: string;
   content: string | null;
-  createdAt?: string | Date; // optional depending on your API
-  created_at?: string | Date; // optional depending on your API
+  summary?: string | null;
+  summaryUpdatedAt?: string | Date | null;
+  createdAt?: string | Date;
+  created_at?: string | Date;
 };
 
 export function EntryRow({
@@ -114,6 +116,13 @@ export function EntryRow({
                   <span className="text-xs text-slate-500">· {created}</span>
                 ) : null}
               </div>
+              
+              {entry.summary ? (
+                <p className="mt-1 text-xs text-slate-500 line-clamp-1">
+                  Summary: {entry.summary}
+                </p>
+              ) : null}
+
               {entry.content ? (
                 <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">
                   {entry.content}

@@ -5,6 +5,56 @@ import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+
+function makeStubSummary(input: { title: string; content: string | null }) {
+  const base = ((input.content ?? "").trim() || input.title.trim()).replace(
+    /\s+/g,
+    " "
+  );
+  if (!base) return "No content to summarize.";
+  return base.slice(0, 240).trim();
+}
+
+export async function generateEntrySummaryAction(input: { id: number }) {
+  const id = Number(input.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error("Invalid id.");
+  }
+
+  const row = await db
+    .select({
+      id: entries.id,
+      title: entries.title,
+      content: entries.content,
+    })
+    .from(entries)
+    .where(eq(entries.id, id))
+    .limit(1);
+
+  const entry = row[0];
+  if (!entry) {
+    throw new Error("Entry not found.");
+  }
+
+  const summary = makeStubSummary({
+    title: entry.title ?? "",
+    content: entry.content ?? null,
+  });
+
+  await db
+    .update(entries)
+    .set({
+      summary,
+      summaryUpdatedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, id));
+
+  revalidatePath("/entries");
+  revalidatePath(`/entries/${id}`);
+}
+
+
 export async function createEntryAction(input: {
   title: string;
   content?: string | null;
