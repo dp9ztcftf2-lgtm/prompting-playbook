@@ -8,11 +8,18 @@ export type Entry = {
   id: number;
   title: string;
   content: string | null;
+
   summary?: string | null;
   summaryUpdatedAt?: string | Date | null;
+
+  // Day 11
+  tags?: string[] | null;
+  tagsUpdatedAt?: string | Date | null;
+
   createdAt?: string | Date;
   created_at?: string | Date;
 };
+
 
 export function EntryRow({
   entry,
@@ -116,15 +123,31 @@ export function EntryRow({
                   <span className="text-xs text-slate-500">· {created}</span>
                 ) : null}
               </div>
-              
+
               {entry.summary ? (
                 <p className="mt-1 text-xs text-slate-500 line-clamp-1">
                   Summary: {entry.summary}
                 </p>
               ) : null}
 
+              {entry.tags?.length ? (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {entry.tags.slice(0, 2).map((t) => (
+                    <span key={t} className="rounded-full border px-2 py-0.5 text-[11px]">
+                      {t}
+                    </span>
+                  ))}
+                  {entry.tags.length > 2 ? (
+                    <span className="text-[11px] text-slate-500">+{entry.tags.length - 2}</span>
+                  ) : null}
+                </div>
+              ) : null}
+
               {entry.content ? (
-                <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">
+                <p
+                  className="mt-1 text-sm text-slate-700 whitespace-pre-wrap line-clamp-5"
+                  title="Content truncated"
+                >
                   {entry.content}
                 </p>
               ) : (
@@ -132,6 +155,8 @@ export function EntryRow({
                   No content
                 </p>
               )}
+
+
             </>
           ) : (
             <div className="space-y-2">

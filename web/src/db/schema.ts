@@ -10,6 +10,11 @@ export const entries = pgTable("entries", {
   // AI-ready derived fields
   summary: text("summary"),
   summaryUpdatedAt: timestamp("summary_updated_at"),
+
+  // Day 11: AI-generated tags
+  tags: text("tags").array(), // nullable
+  tagsUpdatedAt: timestamp("tags_updated_at"),
 });
+
 export type Entry = typeof entries.$inferSelect;
 export type NewEntry = typeof entries.$inferInsert;

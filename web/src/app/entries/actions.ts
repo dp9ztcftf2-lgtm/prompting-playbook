@@ -33,6 +33,88 @@ async function generateConciseSummary(input: { title: string; content: string | 
   return resp.output_text.trim();
 }
 
+function sanitizeTag(raw: string) {
+  const t = (raw ?? "")
+    .toLowerCase()
+    .trim()
+    // remove punctuation/symbols, keep letters/numbers/spaces/hyphen
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, " ");
+
+  // max 2 words
+  const words = t.split(" ").filter(Boolean).slice(0, 2);
+  return words.join(" ");
+}
+
+function uniq(tags: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const tag of tags) {
+    if (!tag) continue;
+    if (seen.has(tag)) continue;
+    seen.add(tag);
+    out.push(tag);
+  }
+  return out;
+}
+
+async function generateTags(input: { title: string; content: string | null }) {
+  const title = (input.title ?? "").trim();
+  const content = (input.content ?? "").trim();
+
+  const source = content || title;
+  if (!source) return [] as string[];
+
+  const resp = await openai.responses.create({
+    model: "gpt-5",
+    reasoning: { effort: "low" },
+    // Key: force machine-safe output
+    text: { format: { type: "json_object" } },
+    input: [
+      {
+        role: "system",
+        content: [
+          "You generate tags for user-written notes.",
+          'Return ONLY valid JSON with the shape: {"tags": string[]}.',
+          "Rules for each tag:",
+          "- lowercase",
+          "- no punctuation",
+          "- no duplicates",
+          "- max 2 words per tag",
+          "- noun phrase",
+          "Return 3 to 6 tags.",
+        ].join("\n"),
+      },
+      {
+        role: "user",
+        content: `Title: ${title}\n\nContent:\n${content}`,
+      },
+    ],
+  });
+
+  // Parse JSON safely
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(resp.output_text);
+  } catch {
+    throw new Error("AI tags output was not valid JSON.");
+  }
+
+  const obj = parsed as { tags?: unknown };
+  const rawTags = Array.isArray(obj.tags) ? obj.tags : [];
+
+  const cleaned = uniq(
+    rawTags
+      .filter((t): t is string => typeof t === "string")
+      .map(sanitizeTag)
+      .filter(Boolean)
+  ).slice(0, 6);
+
+  // Ensure we meet the contract: 3–6 if possible; otherwise return what we have
+  return cleaned;
+}
+
+
 export async function generateEntrySummaryAction(input: { id: number }) {
   const id = Number(input.id);
   if (!Number.isFinite(id) || id <= 0) {
@@ -64,6 +146,53 @@ export async function generateEntrySummaryAction(input: { id: number }) {
     .set({
       summary,
       summaryUpdatedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, id));
+
+  revalidatePath("/entries");
+  revalidatePath(`/entries/${id}`);
+}
+
+export async function generateEntryTagsAction(input: { id: number }) {
+  const id = Number(input.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error("Invalid id.");
+  }
+
+  const row = await db
+    .select({
+      id: entries.id,
+      title: entries.title,
+      content: entries.content,
+      tags: entries.tags,
+    })
+    .from(entries)
+    .where(eq(entries.id, id))
+    .limit(1);
+
+  const entry = row[0];
+  if (!entry) {
+    throw new Error("Entry not found.");
+  }
+
+  // Guardrail: prevent accidental regen loops (Day 11 default behavior)
+  if (entry.tags && entry.tags.length > 0) {
+    revalidatePath("/entries");
+    revalidatePath(`/entries/${id}`);
+    return;
+  }
+
+  const tags = await generateTags({
+    title: entry.title ?? "",
+    content: entry.content ?? null,
+  });
+
+  await db
+    .update(entries)
+    .set({
+      tags,
+      tagsUpdatedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(entries.id, id));

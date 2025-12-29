@@ -4,6 +4,8 @@ import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { GenerateSummaryButton } from "../ui/GenerateSummaryButton";
+import { GenerateTagsButton } from "../ui/GenerateTagsButton";
+
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -30,9 +32,11 @@ export default async function EntryDetailPage(props: PageProps) {
       updatedAt: true,
       summary: true,
       summaryUpdatedAt: true,
+      tags: true,
+      tagsUpdatedAt: true,
     },
   });
-  
+
 
   if (!row) notFound();
 
@@ -43,13 +47,22 @@ export default async function EntryDetailPage(props: PageProps) {
   const backHref = sp.toString() ? `/entries?${sp.toString()}` : "/entries";
 
   return (
-    <main className="mx-auto max-w-3xl p-6 space-y-6">
+    <main id="top" className="mx-auto max-w-3xl p-6 space-y-6">
+
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{row.title}</h1>
-        <Link href={backHref} className="text-sm underline-offset-4 hover:underline">
-          Back to results
-        </Link>
+
+        <div className="flex items-center gap-4 text-sm">
+          <a href="#bottom" className="underline-offset-4 hover:underline">
+            Bottom
+          </a>
+
+          <Link href={backHref} className="underline-offset-4 hover:underline">
+            Back to results
+          </Link>
+        </div>
       </div>
+
 
       {row.content ? (
         <div className="whitespace-pre-wrap rounded-lg border p-4">
@@ -84,6 +97,34 @@ export default async function EntryDetailPage(props: PageProps) {
         )}
       </section>
 
+      {/* Tags */}
+      <section className="rounded-lg border p-4 space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">Tags</h2>
+          <GenerateTagsButton id={row.id} disabled={!!row.tags?.length} />
+        </div>
+
+        {row.tags && row.tags.length > 0 ? (
+          <>
+            <div className="flex flex-wrap gap-2">
+              {row.tags.map((t) => (
+                <span key={t} className="rounded-full border px-2 py-0.5 text-xs">
+                  {t}
+                </span>
+              ))}
+            </div>
+
+            {row.tagsUpdatedAt ? (
+              <p className="text-xs text-slate-500">
+                Updated {new Date(row.tagsUpdatedAt).toLocaleString()}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-sm text-slate-500">No tags yet.</p>
+        )}
+      </section>
+
       {/* Created / Updated */}
       <div className="grid gap-2 text-sm text-slate-600">
         <div>
@@ -96,17 +137,17 @@ export default async function EntryDetailPage(props: PageProps) {
         </div>
       </div>
 
-
-      <div className="grid gap-2 text-sm text-slate-600">
-        <div>
-          <span className="font-medium text-slate-900">Created:</span>{" "}
-          {new Date(row.createdAt).toLocaleString()}
-        </div>
-        <div>
-          <span className="font-medium text-slate-900">Updated:</span>{" "}
-          {new Date(row.updatedAt).toLocaleString()}
-        </div>
+      <div className="flex justify-end gap-4 text-sm">
+        <a href="#top" className="underline-offset-4 hover:underline">
+          Back to top
+        </a>
+        <Link href={backHref} className="underline-offset-4 hover:underline">
+          Back to results
+        </Link>
       </div>
+
+      <div id="bottom" />
+
     </main>
   );
 }

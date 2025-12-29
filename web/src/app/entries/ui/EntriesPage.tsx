@@ -48,21 +48,24 @@ export default async function EntriesPage(props: {
 
   // 2) fetch just the current page
   const rows = await db
-  .select({
-    id: entries.id,
-    title: entries.title,
-    content: entries.content,
-    createdAt: entries.createdAt,
-    updatedAt: entries.updatedAt,
-    summary: entries.summary,
-    summaryUpdatedAt: entries.summaryUpdatedAt,
-  })
-  .from(entries)
-  .where(whereClause)
-  .orderBy(desc(orderByCol))
-  .limit(PAGE_SIZE)
-  .offset(offset);
+    .select({
+      id: entries.id,
+      title: entries.title,
+      content: entries.content,
+      createdAt: entries.createdAt,
+      updatedAt: entries.updatedAt,
+      summary: entries.summary,
+      summaryUpdatedAt: entries.summaryUpdatedAt,
 
+      // Day 11
+      tags: entries.tags,
+      tagsUpdatedAt: entries.tagsUpdatedAt,
+    })
+    .from(entries)
+    .where(whereClause)
+    .orderBy(desc(orderByCol))
+    .limit(PAGE_SIZE)
+    .offset(offset);
 
   const resultsLabel = q
     ? `${totalCount} result${totalCount === 1 ? "" : "s"} for “${q}”`
@@ -114,7 +117,6 @@ export default async function EntriesPage(props: {
           <div className="text-sm font-medium text-slate-900">New entry</div>
         </CardHeader>
         <CardContent>
-          {/* Client owns interaction; server owns truth */}
           <EntriesClient
             initialEntries={rows}
             initialQuery={q}
@@ -128,3 +130,4 @@ export default async function EntriesPage(props: {
     </div>
   );
 }
+
