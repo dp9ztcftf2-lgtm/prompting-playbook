@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { openai } from "@/lib/openai";
+import { ENTRY_CATEGORIES, isEntryCategory } from "@/lib/category";
 
 
 async function generateConciseSummary(input: { title: string; content: string | null }) {
@@ -114,6 +115,55 @@ async function generateTags(input: { title: string; content: string | null }) {
   return cleaned;
 }
 
+async function generateCategory(input: { title: string; content: string | null }) {
+  const title = (input.title ?? "").trim();
+  const content = (input.content ?? "").trim();
+
+  const source = content || title;
+  if (!source) return "other";
+
+  const resp = await openai.responses.create({
+    model: "gpt-5",
+    reasoning: { effort: "low" },
+    // force machine-safe JSON
+    text: { format: { type: "json_object" } },
+    input: [
+      {
+        role: "system",
+        content: [
+          "You classify user-written notes into exactly one category.",
+          `Return ONLY valid JSON with the shape: {"category": string}.`,
+          "The category MUST be one of the following enum values (verbatim):",
+          ENTRY_CATEGORIES.join(", "),
+          "",
+          "Rules:",
+          "- Output exactly one category.",
+          "- No extra keys, no explanation text.",
+          "- If unsure, use: other",
+        ].join("\n"),
+      },
+      {
+        role: "user",
+        content: `Title: ${title}\n\nContent:\n${content}`,
+      },
+    ],
+  });
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(resp.output_text);
+  } catch {
+    throw new Error("AI category output was not valid JSON.");
+  }
+
+  const obj = parsed as { category?: unknown };
+  const raw = typeof obj.category === "string" ? obj.category.trim() : "other";
+  const normalized = raw.toLowerCase();
+
+  if (!isEntryCategory(normalized)) return "other";
+  return normalized;
+}
+
 
 export async function generateEntrySummaryAction(input: { id: number }) {
   const id = Number(input.id);
@@ -193,6 +243,53 @@ export async function generateEntryTagsAction(input: { id: number }) {
     .set({
       tags,
       tagsUpdatedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, id));
+
+  revalidatePath("/entries");
+  revalidatePath(`/entries/${id}`);
+}
+
+export async function generateEntryCategoryAction(input: { id: number }) {
+  const id = Number(input.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error("Invalid id.");
+  }
+
+  const row = await db
+    .select({
+      id: entries.id,
+      title: entries.title,
+      content: entries.content,
+      category: entries.category,
+    })
+    .from(entries)
+    .where(eq(entries.id, id))
+    .limit(1);
+
+  const entry = row[0];
+  if (!entry) {
+    throw new Error("Entry not found.");
+  }
+
+  // Guardrail: prevent accidental regen loops (Day 12 default behavior)
+  if (entry.category && entry.category.trim().length > 0) {
+    revalidatePath("/entries");
+    revalidatePath(`/entries/${id}`);
+    return;
+  }
+
+  const category = await generateCategory({
+    title: entry.title ?? "",
+    content: entry.content ?? null,
+  });
+
+  await db
+    .update(entries)
+    .set({
+      category,
+      categoryUpdatedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(entries.id, id));

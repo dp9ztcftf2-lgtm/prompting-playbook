@@ -60,6 +60,10 @@ export default async function EntriesPage(props: {
       // Day 11
       tags: entries.tags,
       tagsUpdatedAt: entries.tagsUpdatedAt,
+
+      // Day 12
+      category: entries.category,
+      categoryUpdatedAt: entries.categoryUpdatedAt,
     })
     .from(entries)
     .where(whereClause)

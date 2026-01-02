@@ -36,6 +36,13 @@
       "when": 1767023242621,
       "tag": "0004_high_gamora",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1767372783238,
+      "tag": "0005_flat_baron_strucker",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { deleteEntryAction, updateEntryAction } from "@/app/entries/actions";
 import Link from "next/link";
+import { deleteEntryAction, updateEntryAction, generateEntryCategoryAction } from "@/app/entries/actions";
 
 export type Entry = {
   id: number;
@@ -16,8 +16,13 @@ export type Entry = {
   tags?: string[] | null;
   tagsUpdatedAt?: string | Date | null;
 
+  // Day 12
+  category?: string | null;
+  categoryUpdatedAt?: string | Date | null;
+
   createdAt?: string | Date;
   created_at?: string | Date;
+
 };
 
 
@@ -44,6 +49,7 @@ export function EntryRow({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGeneratingCategory, setIsGeneratingCategory] = useState(false);
 
   function startEdit() {
     setError(null);
@@ -88,6 +94,22 @@ export function EntryRow({
     }
   }
 
+  async function generateCategory() {
+    setError(null);
+    setIsGeneratingCategory(true);
+
+    try {
+      await generateEntryCategoryAction({ id: entry.id });
+      onChanged?.();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
+    } finally {
+      setIsGeneratingCategory(false);
+    }
+  }
+
+
   async function deleteEntry() {
     setError(null);
     setIsDeleting(true);
@@ -119,10 +141,18 @@ export function EntryRow({
                     {entry.title}
                   </Link>
                 </h3>
+
+                {entry.category ? (
+                  <span className="rounded-full border px-2 py-0.5 text-[11px] text-slate-700">
+                    {entry.category}
+                  </span>
+                ) : null}
+
                 {created ? (
                   <span className="text-xs text-slate-500">· {created}</span>
                 ) : null}
               </div>
+
 
               {entry.summary ? (
                 <p className="mt-1 text-xs text-slate-500 line-clamp-1">
@@ -189,6 +219,16 @@ export function EntryRow({
               >
                 Edit
               </button>
+              {!entry.category ? (
+                <button
+                  onClick={generateCategory}
+                  disabled={isGeneratingCategory}
+                  className="rounded-md border px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  {isGeneratingCategory ? "Categorizing…" : "Generate Category"}
+                </button>
+              ) : null}
+
               <button
                 onClick={deleteEntry}
                 disabled={isDeleting}

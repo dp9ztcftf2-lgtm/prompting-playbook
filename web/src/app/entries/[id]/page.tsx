@@ -5,7 +5,7 @@ import { entries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { GenerateSummaryButton } from "../ui/GenerateSummaryButton";
 import { GenerateTagsButton } from "../ui/GenerateTagsButton";
-
+import { GenerateCategoryButton } from "../ui/GenerateCategoryButton";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -34,7 +34,12 @@ export default async function EntryDetailPage(props: PageProps) {
       summaryUpdatedAt: true,
       tags: true,
       tagsUpdatedAt: true,
+
+      // Day 12
+      category: true,
+      categoryUpdatedAt: true,
     },
+
   });
 
 
@@ -96,6 +101,33 @@ export default async function EntryDetailPage(props: PageProps) {
           <p className="text-sm text-slate-500">No summary yet.</p>
         )}
       </section>
+
+      {/* Category */}
+      <section className="rounded-lg border p-4 space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">Category</h2>
+          <GenerateCategoryButton id={row.id} disabled={!!row.category} />
+        </div>
+
+        {row.category ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border px-2 py-0.5 text-xs">
+                {row.category}
+              </span>
+            </div>
+
+            {row.categoryUpdatedAt ? (
+              <p className="text-xs text-slate-500">
+                Updated {new Date(row.categoryUpdatedAt).toLocaleString()}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-sm text-slate-500">No category yet.</p>
+        )}
+      </section>
+
 
       {/* Tags */}
       <section className="rounded-lg border p-4 space-y-2">

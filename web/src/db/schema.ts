@@ -14,6 +14,10 @@ export const entries = pgTable("entries", {
   // Day 11: AI-generated tags
   tags: text("tags").array(), // nullable
   tagsUpdatedAt: timestamp("tags_updated_at"),
+
+  // Day 12: AI-derived category classification
+  category: text("category"), // nullable
+  categoryUpdatedAt: timestamp("category_updated_at"),
 });
 
 export type Entry = typeof entries.$inferSelect;
