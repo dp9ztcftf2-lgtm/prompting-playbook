@@ -38,12 +38,21 @@ export default async function EntryDetailPage(props: PageProps) {
       // Day 12
       category: true,
       categoryUpdatedAt: true,
+
+      // Day 13
+      categoryConfidence: true,
+      categoryRationale: true,
     },
 
   });
 
 
   if (!row) notFound();
+
+  const confidenceText =
+    row.categoryConfidence === null || row.categoryConfidence === undefined
+      ? null
+      : Number(row.categoryConfidence).toFixed(2);
 
   const sp = new URLSearchParams();
   if (searchParams?.q) sp.set("q", searchParams.q);
@@ -115,7 +124,19 @@ export default async function EntryDetailPage(props: PageProps) {
               <span className="rounded-full border px-2 py-0.5 text-xs">
                 {row.category}
               </span>
+
+              {confidenceText ? (
+                <span className="text-xs text-slate-500">
+                  confidence {confidenceText}
+                </span>
+              ) : null}
             </div>
+
+            {row.categoryRationale ? (
+              <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                {row.categoryRationale}
+              </p>
+            ) : null}
 
             {row.categoryUpdatedAt ? (
               <p className="text-xs text-slate-500">
@@ -126,6 +147,7 @@ export default async function EntryDetailPage(props: PageProps) {
         ) : (
           <p className="text-sm text-slate-500">No category yet.</p>
         )}
+
       </section>
 
 

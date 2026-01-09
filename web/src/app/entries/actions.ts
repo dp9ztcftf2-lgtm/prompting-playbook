@@ -5,8 +5,10 @@ import { db } from "@/db/client";
 import { entries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { openai } from "@/lib/openai";
-import { ENTRY_CATEGORIES, isEntryCategory } from "@/lib/category";
 
+import { buildCategoryPrompt } from "@/lib/categoryPrompt";
+import { safeJsonParse } from "@/lib/safeJson";
+import { sanitizeCategoryClassification } from "@/lib/categoryClassification";
 
 async function generateConciseSummary(input: { title: string; content: string | null }) {
   const title = (input.title ?? "").trim();
@@ -115,12 +117,19 @@ async function generateTags(input: { title: string; content: string | null }) {
   return cleaned;
 }
 
-async function generateCategory(input: { title: string; content: string | null }) {
+async function generateCategoryClassification(input: {
+  title: string;
+  content: string | null;
+}) {
   const title = (input.title ?? "").trim();
   const content = (input.content ?? "").trim();
 
   const source = content || title;
-  if (!source) return "other";
+  if (!source) {
+    return { category: "other", confidence: 0.5, rationale: "" };
+  }
+
+  const prompt = buildCategoryPrompt({ title, content });
 
   const resp = await openai.responses.create({
     model: "gpt-5",
@@ -130,38 +139,17 @@ async function generateCategory(input: { title: string; content: string | null }
     input: [
       {
         role: "system",
-        content: [
-          "You classify user-written notes into exactly one category.",
-          `Return ONLY valid JSON with the shape: {"category": string}.`,
-          "The category MUST be one of the following enum values (verbatim):",
-          ENTRY_CATEGORIES.join(", "),
-          "",
-          "Rules:",
-          "- Output exactly one category.",
-          "- No extra keys, no explanation text.",
-          "- If unsure, use: other",
-        ].join("\n"),
+        content: "Return only valid JSON. No extra text.",
       },
       {
         role: "user",
-        content: `Title: ${title}\n\nContent:\n${content}`,
+        content: prompt,
       },
     ],
   });
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(resp.output_text);
-  } catch {
-    throw new Error("AI category output was not valid JSON.");
-  }
-
-  const obj = parsed as { category?: unknown };
-  const raw = typeof obj.category === "string" ? obj.category.trim() : "other";
-  const normalized = raw.toLowerCase();
-
-  if (!isEntryCategory(normalized)) return "other";
-  return normalized;
+  const raw = safeJsonParse(resp.output_text);
+  return sanitizeCategoryClassification(raw);
 }
 
 
@@ -176,6 +164,9 @@ export async function generateEntrySummaryAction(input: { id: number }) {
       id: entries.id,
       title: entries.title,
       content: entries.content,
+      category: entries.category,
+      categoryConfidence: entries.categoryConfidence,
+      categoryRationale: entries.categoryRationale,
     })
     .from(entries)
     .where(eq(entries.id, id))
@@ -280,7 +271,7 @@ export async function generateEntryCategoryAction(input: { id: number }) {
     return;
   }
 
-  const category = await generateCategory({
+  const result = await generateCategoryClassification({
     title: entry.title ?? "",
     content: entry.content ?? null,
   });
@@ -288,12 +279,13 @@ export async function generateEntryCategoryAction(input: { id: number }) {
   await db
     .update(entries)
     .set({
-      category,
+      category: result.category,
+      categoryConfidence: result.confidence,
+      categoryRationale: result.rationale,
       categoryUpdatedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(entries.id, id));
-
   revalidatePath("/entries");
   revalidatePath(`/entries/${id}`);
 }

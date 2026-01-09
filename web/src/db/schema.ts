@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, real } from "drizzle-orm/pg-core";
 
 export const entries = pgTable("entries", {
   id: serial("id").primaryKey(),
@@ -18,6 +18,10 @@ export const entries = pgTable("entries", {
   // Day 12: AI-derived category classification
   category: text("category"), // nullable
   categoryUpdatedAt: timestamp("category_updated_at"),
+
+  // Day 13: confidence + rationale (confidence-aware classification)
+  categoryConfidence: real("category_confidence"), // nullable, 0..1
+  categoryRationale: text("category_rationale"), // nullable
 });
 
 export type Entry = typeof entries.$inferSelect;
