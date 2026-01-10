@@ -10,6 +10,10 @@ import { buildCategoryPrompt } from "@/lib/categoryPrompt";
 import { safeJsonParse } from "@/lib/safeJson";
 import { sanitizeCategoryClassification } from "@/lib/categoryClassification";
 
+const CATEGORY_MODEL = "gpt-5";
+const CATEGORY_VERSION = 1;
+const CATEGORY_PROMPT_VERSION = "category_v1";
+
 async function generateConciseSummary(input: { title: string; content: string | null }) {
   const title = (input.title ?? "").trim();
   const content = (input.content ?? "").trim();
@@ -277,15 +281,22 @@ export async function generateEntryCategoryAction(input: { id: number }) {
   });
 
   await db
-    .update(entries)
-    .set({
-      category: result.category,
-      categoryConfidence: result.confidence,
-      categoryRationale: result.rationale,
-      categoryUpdatedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(entries.id, id));
+  .update(entries)
+  .set({
+    category: result.category,
+    categoryConfidence: result.confidence,
+    categoryRationale: result.rationale,
+    categoryUpdatedAt: new Date(),
+
+    // Day 14: provenance (written only when generation happens)
+    categoryModel: CATEGORY_MODEL,
+    categoryVersion: CATEGORY_VERSION,
+    categoryPromptVersion: CATEGORY_PROMPT_VERSION,
+
+    updatedAt: new Date(),
+  })
+  .where(eq(entries.id, id));
+
   revalidatePath("/entries");
   revalidatePath(`/entries/${id}`);
 }

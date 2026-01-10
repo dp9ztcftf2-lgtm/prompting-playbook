@@ -50,6 +50,13 @@
       "when": 1767996066726,
       "tag": "0006_cuddly_roxanne_simpson",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1768079029053,
+      "tag": "0007_serious_wilson_fisk",
+      "breakpoints": true
     }
   ]
 }

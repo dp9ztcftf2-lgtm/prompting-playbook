@@ -34,14 +34,16 @@ export default async function EntryDetailPage(props: PageProps) {
       summaryUpdatedAt: true,
       tags: true,
       tagsUpdatedAt: true,
-
       // Day 12
       category: true,
       categoryUpdatedAt: true,
-
       // Day 13
       categoryConfidence: true,
       categoryRationale: true,
+      // Day 14
+      categoryModel: true,
+      categoryVersion: true,
+      categoryPromptVersion: true,
     },
 
   });
@@ -53,6 +55,11 @@ export default async function EntryDetailPage(props: PageProps) {
     row.categoryConfidence === null || row.categoryConfidence === undefined
       ? null
       : Number(row.categoryConfidence).toFixed(2);
+
+  const needsReview =
+    row.categoryConfidence !== null &&
+    row.categoryConfidence !== undefined &&
+    Number(row.categoryConfidence) < 0.6;
 
   const sp = new URLSearchParams();
   if (searchParams?.q) sp.set("q", searchParams.q);
@@ -125,12 +132,25 @@ export default async function EntryDetailPage(props: PageProps) {
                 {row.category}
               </span>
 
-              {confidenceText ? (
-                <span className="text-xs text-slate-500">
-                  confidence {confidenceText}
+              {needsReview ? (
+                <span className="rounded-full border px-2 py-0.5 text-[11px] text-slate-500">
+                  Needs review
                 </span>
               ) : null}
+
+              {confidenceText ? (
+                <span className="text-xs text-slate-500">confidence {confidenceText}</span>
+              ) : null}
             </div>
+
+            {/* Day 14: provenance (diagnostic) */}
+            {row.categoryModel || row.categoryVersion || row.categoryPromptVersion ? (
+              <p className="text-xs text-slate-500">
+                Model: {row.categoryModel ?? "—"} · Version: {row.categoryVersion ?? "—"}
+                {row.categoryPromptVersion ? ` · Prompt: ${row.categoryPromptVersion}` : null}
+              </p>
+            ) : null}
+
 
             {row.categoryRationale ? (
               <p className="text-sm text-slate-700 whitespace-pre-wrap">
