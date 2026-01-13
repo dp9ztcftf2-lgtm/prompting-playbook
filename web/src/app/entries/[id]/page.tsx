@@ -32,8 +32,18 @@ export default async function EntryDetailPage(props: PageProps) {
       updatedAt: true,
       summary: true,
       summaryUpdatedAt: true,
+      // Day 15: provenance (summary)
+      summaryModel: true,
+      summaryVersion: true,
+      summaryPromptVersion: true,
+
       tags: true,
       tagsUpdatedAt: true,
+      // Day 15: provenance (tags)
+      tagsModel: true,
+      tagsVersion: true,
+      tagsPromptVersion: true,
+
       // Day 12
       category: true,
       categoryUpdatedAt: true,
@@ -107,6 +117,15 @@ export default async function EntryDetailPage(props: PageProps) {
             <p className="text-sm text-slate-700 whitespace-pre-wrap">
               {row.summary}
             </p>
+
+            {/* Day 15: provenance (diagnostic) */}
+            {row.summaryModel || row.summaryVersion || row.summaryPromptVersion ? (
+              <p className="text-xs text-slate-500">
+                Model: {row.summaryModel ?? "—"} · Version: {row.summaryVersion ?? "—"}
+                {row.summaryPromptVersion ? ` · Prompt: ${row.summaryPromptVersion}` : null}
+              </p>
+            ) : null}
+
             {row.summaryUpdatedAt ? (
               <p className="text-xs text-slate-500">
                 Updated {new Date(row.summaryUpdatedAt).toLocaleString()}
@@ -187,6 +206,14 @@ export default async function EntryDetailPage(props: PageProps) {
                 </span>
               ))}
             </div>
+
+            {/* Day 15: provenance (diagnostic) */}
+            {row.tagsModel || row.tagsVersion || row.tagsPromptVersion ? (
+              <p className="text-xs text-slate-500">
+                Model: {row.tagsModel ?? "—"} · Version: {row.tagsVersion ?? "—"}
+                {row.tagsPromptVersion ? ` · Prompt: ${row.tagsPromptVersion}` : null}
+              </p>
+            ) : null}
 
             {row.tagsUpdatedAt ? (
               <p className="text-xs text-slate-500">

@@ -18,9 +18,19 @@ export const entries = pgTable("entries", {
   summary: text("summary"),
   summaryUpdatedAt: timestamp("summary_updated_at"),
 
+  // Day 15: provenance + versioning (summary)
+  summaryModel: text("summary_model"), // nullable
+  summaryVersion: integer("summary_version"), // nullable
+  summaryPromptVersion: text("summary_prompt_version"), // nullable (optional)
+
   // Day 11: AI-generated tags
   tags: text("tags").array(), // nullable
   tagsUpdatedAt: timestamp("tags_updated_at"),
+
+  // Day 15: provenance + versioning (tags)
+  tagsModel: text("tags_model"), // nullable
+  tagsVersion: integer("tags_version"), // nullable
+  tagsPromptVersion: text("tags_prompt_version"), // nullable (optional)
 
   // Day 12: AI-derived category classification
   category: text("category"), // nullable

@@ -20,6 +20,21 @@ export type Entry = {
   category?: string | null;
   categoryUpdatedAt?: string | Date | null;
 
+  // Day 15: provenance + versioning (summary)
+  summaryModel?: string | null;
+  summaryVersion?: number | null;
+  summaryPromptVersion?: string | null;
+
+  // Day 15: provenance + versioning (tags)
+  tagsModel?: string | null;
+  tagsVersion?: number | null;
+  tagsPromptVersion?: string | null;
+
+  // Day 14: provenance + versioning (category)
+  categoryModel?: string | null;
+  categoryVersion?: number | null;
+  categoryPromptVersion?: string | null;
+
   createdAt?: string | Date;
   created_at?: string | Date;
 
@@ -153,7 +168,6 @@ export function EntryRow({
                 ) : null}
               </div>
 
-
               {entry.summary ? (
                 <p className="mt-1 text-xs text-slate-500 line-clamp-1">
                   Summary: {entry.summary}
@@ -219,7 +233,7 @@ export function EntryRow({
               >
                 Edit
               </button>
-              {!entry.category ? (
+              {!(entry.category && entry.category.trim().length > 0) ? (
                 <button
                   onClick={generateCategory}
                   disabled={isGeneratingCategory}
@@ -228,6 +242,7 @@ export function EntryRow({
                   {isGeneratingCategory ? "Categorizing…" : "Generate Category"}
                 </button>
               ) : null}
+
 
               <button
                 onClick={deleteEntry}

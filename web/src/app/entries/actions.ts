@@ -14,6 +14,15 @@ const CATEGORY_MODEL = "gpt-5";
 const CATEGORY_VERSION = 1;
 const CATEGORY_PROMPT_VERSION = "category_v1";
 
+const SUMMARY_MODEL = "gpt-5";
+const SUMMARY_VERSION = 1;
+const SUMMARY_PROMPT_VERSION = "summary_v1";
+
+const TAGS_MODEL = "gpt-5";
+const TAGS_VERSION = 1;
+const TAGS_PROMPT_VERSION = "tags_v1";
+
+
 async function generateConciseSummary(input: { title: string; content: string | null }) {
   const title = (input.title ?? "").trim();
   const content = (input.content ?? "").trim();
@@ -168,9 +177,7 @@ export async function generateEntrySummaryAction(input: { id: number }) {
       id: entries.id,
       title: entries.title,
       content: entries.content,
-      category: entries.category,
-      categoryConfidence: entries.categoryConfidence,
-      categoryRationale: entries.categoryRationale,
+      summary: entries.summary,
     })
     .from(entries)
     .where(eq(entries.id, id))
@@ -181,16 +188,29 @@ export async function generateEntrySummaryAction(input: { id: number }) {
     throw new Error("Entry not found.");
   }
 
+  // Guardrail: prevent accidental regen loops (Day 15 default behavior)
+  if (entry.summary && entry.summary.trim().length > 0) {
+    revalidatePath("/entries");
+    revalidatePath(`/entries/${id}`);
+    return;
+  }
+
   const summary = await generateConciseSummary({
     title: entry.title ?? "",
     content: entry.content ?? null,
-  });  
+  });
 
   await db
     .update(entries)
     .set({
       summary,
       summaryUpdatedAt: new Date(),
+
+      // Day 15: provenance (written only when generation happens)
+      summaryModel: SUMMARY_MODEL,
+      summaryVersion: SUMMARY_VERSION,
+      summaryPromptVersion: SUMMARY_PROMPT_VERSION,
+
       updatedAt: new Date(),
     })
     .where(eq(entries.id, id));
@@ -198,6 +218,7 @@ export async function generateEntrySummaryAction(input: { id: number }) {
   revalidatePath("/entries");
   revalidatePath(`/entries/${id}`);
 }
+
 
 export async function generateEntryTagsAction(input: { id: number }) {
   const id = Number(input.id);
@@ -238,6 +259,12 @@ export async function generateEntryTagsAction(input: { id: number }) {
     .set({
       tags,
       tagsUpdatedAt: new Date(),
+
+      // Day 15: provenance (written only when generation happens)
+      tagsModel: TAGS_MODEL,
+      tagsVersion: TAGS_VERSION,
+      tagsPromptVersion: TAGS_PROMPT_VERSION,
+
       updatedAt: new Date(),
     })
     .where(eq(entries.id, id));
