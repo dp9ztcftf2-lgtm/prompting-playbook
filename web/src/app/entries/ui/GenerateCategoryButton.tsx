@@ -3,14 +3,27 @@
 import { useState } from "react";
 import { generateEntryCategoryAction } from "@/app/entries/actions";
 
-export function GenerateCategoryButton(props: { id: number; disabled?: boolean }) {
+export function GenerateCategoryButton({
+  id,
+  hasCategory,
+}: {
+  id: number;
+  hasCategory: boolean;
+}) {
   const [isPending, setIsPending] = useState(false);
-  const disabled = !!props.disabled || isPending;
+  const disabled = isPending;
 
   async function onClick() {
+    if (hasCategory) {
+      const ok = window.confirm(
+        "Regenerate category? This will overwrite the current category (and confidence/rationale)."
+      );
+      if (!ok) return;
+    }
+
     setIsPending(true);
     try {
-      await generateEntryCategoryAction({ id: props.id });
+      await generateEntryCategoryAction({ id, force: hasCategory });
     } finally {
       setIsPending(false);
     }
@@ -23,7 +36,7 @@ export function GenerateCategoryButton(props: { id: number; disabled?: boolean }
       disabled={disabled}
       className="rounded-md border px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
     >
-      {isPending ? "Categorizing…" : "Generate Category"}
+      {isPending ? "Categorizing…" : hasCategory ? "Regenerate Category" : "Generate Category"}
     </button>
   );
 }

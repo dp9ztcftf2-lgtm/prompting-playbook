@@ -166,8 +166,13 @@ async function generateCategoryClassification(input: {
 }
 
 
-export async function generateEntrySummaryAction(input: { id: number }) {
+export async function generateEntrySummaryAction(
+  input: { id: number; force?: boolean }
+) {
+
   const id = Number(input.id);
+  const force = input.force === true;
+
   if (!Number.isFinite(id) || id <= 0) {
     throw new Error("Invalid id.");
   }
@@ -189,7 +194,7 @@ export async function generateEntrySummaryAction(input: { id: number }) {
   }
 
   // Guardrail: prevent accidental regen loops (Day 15 default behavior)
-  if (entry.summary && entry.summary.trim().length > 0) {
+  if (!force && entry.summary && entry.summary.trim().length > 0) {
     revalidatePath("/entries");
     revalidatePath(`/entries/${id}`);
     return;
@@ -220,8 +225,12 @@ export async function generateEntrySummaryAction(input: { id: number }) {
 }
 
 
-export async function generateEntryTagsAction(input: { id: number }) {
+export async function generateEntryTagsAction(
+  input: { id: number; force?: boolean }
+) {
   const id = Number(input.id);
+  const force = input.force === true;
+
   if (!Number.isFinite(id) || id <= 0) {
     throw new Error("Invalid id.");
   }
@@ -242,12 +251,12 @@ export async function generateEntryTagsAction(input: { id: number }) {
     throw new Error("Entry not found.");
   }
 
-  // Guardrail: prevent accidental regen loops (Day 11 default behavior)
-  if (entry.tags && entry.tags.length > 0) {
-    revalidatePath("/entries");
-    revalidatePath(`/entries/${id}`);
-    return;
-  }
+// Guardrail: prevent accidental regen loops (Day 15 default behavior)
+if (!force && entry.tags && entry.tags.length > 0) {
+  revalidatePath("/entries");
+  revalidatePath(`/entries/${id}`);
+  return;
+}
 
   const tags = await generateTags({
     title: entry.title ?? "",
@@ -273,8 +282,12 @@ export async function generateEntryTagsAction(input: { id: number }) {
   revalidatePath(`/entries/${id}`);
 }
 
-export async function generateEntryCategoryAction(input: { id: number }) {
+export async function generateEntryCategoryAction(
+  input: { id: number; force?: boolean }
+) {
   const id = Number(input.id);
+  const force = input.force === true;
+
   if (!Number.isFinite(id) || id <= 0) {
     throw new Error("Invalid id.");
   }
@@ -296,11 +309,12 @@ export async function generateEntryCategoryAction(input: { id: number }) {
   }
 
   // Guardrail: prevent accidental regen loops (Day 12 default behavior)
-  if (entry.category && entry.category.trim().length > 0) {
+  if (!force && entry.category && entry.category.trim().length > 0) {
     revalidatePath("/entries");
     revalidatePath(`/entries/${id}`);
     return;
   }
+ 
 
   const result = await generateCategoryClassification({
     title: entry.title ?? "",
@@ -308,21 +322,21 @@ export async function generateEntryCategoryAction(input: { id: number }) {
   });
 
   await db
-  .update(entries)
-  .set({
-    category: result.category,
-    categoryConfidence: result.confidence,
-    categoryRationale: result.rationale,
-    categoryUpdatedAt: new Date(),
+    .update(entries)
+    .set({
+      category: result.category,
+      categoryConfidence: result.confidence,
+      categoryRationale: result.rationale,
+      categoryUpdatedAt: new Date(),
 
-    // Day 14: provenance (written only when generation happens)
-    categoryModel: CATEGORY_MODEL,
-    categoryVersion: CATEGORY_VERSION,
-    categoryPromptVersion: CATEGORY_PROMPT_VERSION,
+      // Day 14: provenance (written only when generation happens)
+      categoryModel: CATEGORY_MODEL,
+      categoryVersion: CATEGORY_VERSION,
+      categoryPromptVersion: CATEGORY_PROMPT_VERSION,
 
-    updatedAt: new Date(),
-  })
-  .where(eq(entries.id, id));
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, id));
 
   revalidatePath("/entries");
   revalidatePath(`/entries/${id}`);

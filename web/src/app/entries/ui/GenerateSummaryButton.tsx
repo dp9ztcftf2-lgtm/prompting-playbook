@@ -3,8 +3,16 @@
 import { useTransition } from "react";
 import { generateEntrySummaryAction } from "@/app/entries/actions";
 
-export function GenerateSummaryButton({ id }: { id: number }) {
+export function GenerateSummaryButton({
+  id,
+  hasSummary,
+}: {
+  id: number;
+  hasSummary: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
+
+  const label = hasSummary ? "Regenerate summary" : "Generate summary";
 
   return (
     <button
@@ -13,11 +21,18 @@ export function GenerateSummaryButton({ id }: { id: number }) {
       disabled={isPending}
       onClick={() =>
         startTransition(async () => {
-          await generateEntrySummaryAction({ id });
+          if (hasSummary) {
+            const ok = window.confirm(
+              "Regenerate summary? This will overwrite the current summary."
+            );
+            if (!ok) return;
+          }
+
+          await generateEntrySummaryAction({ id, force: hasSummary });
         })
       }
     >
-      {isPending ? "Generating…" : "Generate summary"}
+      {isPending ? "Generating…" : label}
     </button>
   );
 }

@@ -109,7 +109,10 @@ export default async function EntryDetailPage(props: PageProps) {
       <section className="rounded-lg border p-4 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Summary</h2>
-          <GenerateSummaryButton id={row.id} />
+          <GenerateSummaryButton
+            id={row.id}
+            hasSummary={!!(row.summary && row.summary.trim().length > 0)}
+          />
         </div>
 
         {row.summary ? (
@@ -141,7 +144,10 @@ export default async function EntryDetailPage(props: PageProps) {
       <section className="rounded-lg border p-4 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Category</h2>
-          <GenerateCategoryButton id={row.id} disabled={!!row.category} />
+          <GenerateCategoryButton
+            id={row.id}
+            hasCategory={!!(row.category && row.category.trim().length > 0)}
+          />
         </div>
 
         {row.category ? (
@@ -194,7 +200,11 @@ export default async function EntryDetailPage(props: PageProps) {
       <section className="rounded-lg border p-4 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Tags</h2>
-          <GenerateTagsButton id={row.id} disabled={!!row.tags?.length} />
+          <GenerateTagsButton
+            id={row.id}
+            hasTags={!!(row.tags && row.tags.length > 0)}
+          />
+
         </div>
 
         {row.tags && row.tags.length > 0 ? (
