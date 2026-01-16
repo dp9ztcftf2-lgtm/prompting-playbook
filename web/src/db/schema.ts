@@ -44,6 +44,17 @@ export const entries = pgTable("entries", {
   categoryModel: text("category_model"), // nullable
   categoryVersion: integer("category_version"), // nullable
   categoryPromptVersion: text("category_prompt_version"), // nullable (optional)
+
+  // Day 16: human review + override loop (category)
+  categoryReviewStatus: text("category_review_status"), // "auto" | "reviewed" | "overridden"
+  categoryOverride: text("category_override"),
+  categoryOverrideReason: text("category_override_reason"),
+  categoryOverriddenAt: timestamp("category_overridden_at"),
+
+  // Day 16: minimal Iris ingestion bridge
+  sourceType: text("source_type"), // e.g. "note" | "irs_pub" | "web"
+  sourceUrl: text("source_url"),
+
 });
 
 export type Entry = typeof entries.$inferSelect;

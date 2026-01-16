@@ -9,6 +9,7 @@ import { openai } from "@/lib/openai";
 import { buildCategoryPrompt } from "@/lib/categoryPrompt";
 import { safeJsonParse } from "@/lib/safeJson";
 import { sanitizeCategoryClassification } from "@/lib/categoryClassification";
+import { isValidCategory } from "@/lib/categoryTaxonomy";
 
 const CATEGORY_MODEL = "gpt-5";
 const CATEGORY_VERSION = 1;
@@ -329,6 +330,9 @@ export async function generateEntryCategoryAction(
       categoryRationale: result.rationale,
       categoryUpdatedAt: new Date(),
 
+      // Day 16: durable review loop default
+      categoryReviewStatus: "auto",
+
       // Day 14: provenance (written only when generation happens)
       categoryModel: CATEGORY_MODEL,
       categoryVersion: CATEGORY_VERSION,
@@ -336,6 +340,7 @@ export async function generateEntryCategoryAction(
 
       updatedAt: new Date(),
     })
+
     .where(eq(entries.id, id));
 
   revalidatePath("/entries");
@@ -402,4 +407,87 @@ export async function deleteEntryAction(input: { id: number }) {
   await db.delete(entries).where(eq(entries.id, id));
 
   revalidatePath("/entries");
+}
+
+type SetCategoryOverrideInput = {
+  id: number;
+  categoryOverride: string;
+  reason?: string;
+};
+
+export async function setCategoryOverrideAction(input: SetCategoryOverrideInput) {
+  const id = Number(input.id);
+  const categoryOverride = (input.categoryOverride ?? "").trim();
+  const reason = input.reason === undefined ? null : (input.reason ?? "").trim();
+
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error("Invalid id.");
+  }
+  if (!isValidCategory(categoryOverride)) {
+    throw new Error("Invalid categoryOverride.");
+  }
+
+  await db
+    .update(entries)
+    .set({
+      categoryOverride,
+      categoryOverrideReason: reason && reason.length > 0 ? reason : null,
+      categoryOverriddenAt: new Date(),
+      categoryReviewStatus: "overridden",
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, id));
+
+  revalidatePath("/entries");
+  revalidatePath(`/entries/${id}`);
+}
+
+type ClearCategoryOverrideInput = {
+  id: number;
+};
+
+export async function clearCategoryOverrideAction(input: ClearCategoryOverrideInput) {
+  const id = Number(input.id);
+
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error("Invalid id.");
+  }
+
+  await db
+    .update(entries)
+    .set({
+      categoryOverride: null,
+      categoryOverrideReason: null,
+      categoryOverriddenAt: null,
+      // user explicitly chose to rely on AI output
+      categoryReviewStatus: "reviewed",
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, id));
+
+  revalidatePath("/entries");
+  revalidatePath(`/entries/${id}`);
+}
+
+type MarkCategoryReviewedInput = {
+  id: number;
+};
+
+export async function markCategoryReviewedAction(input: MarkCategoryReviewedInput) {
+  const id = Number(input.id);
+
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error("Invalid id.");
+  }
+
+  await db
+    .update(entries)
+    .set({
+      categoryReviewStatus: "reviewed",
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, id));
+
+  revalidatePath("/entries");
+  revalidatePath(`/entries/${id}`);
 }

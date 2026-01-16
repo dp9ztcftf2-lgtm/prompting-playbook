@@ -64,6 +64,12 @@ export default async function EntriesPage(props: {
       // Day 12
       category: entries.category,
       categoryUpdatedAt: entries.categoryUpdatedAt,
+
+      // Day 16 (list triage + effective category)
+      categoryOverride: entries.categoryOverride,
+      categoryConfidence: entries.categoryConfidence,
+      categoryReviewStatus: entries.categoryReviewStatus,
+
     })
     .from(entries)
     .where(whereClause)

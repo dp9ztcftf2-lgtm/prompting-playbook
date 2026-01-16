@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { GenerateSummaryButton } from "../ui/GenerateSummaryButton";
 import { GenerateTagsButton } from "../ui/GenerateTagsButton";
 import { GenerateCategoryButton } from "../ui/GenerateCategoryButton";
+import { CategoryReviewControls } from "./ui/CategoryReviewControls";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -54,6 +55,12 @@ export default async function EntryDetailPage(props: PageProps) {
       categoryModel: true,
       categoryVersion: true,
       categoryPromptVersion: true,
+      // Day 16: review/override loop (category)
+      categoryReviewStatus: true,
+      categoryOverride: true,
+      categoryOverrideReason: true,
+      categoryOverriddenAt: true,
+
     },
 
   });
@@ -66,10 +73,16 @@ export default async function EntryDetailPage(props: PageProps) {
       ? null
       : Number(row.categoryConfidence).toFixed(2);
 
+  const reviewStatus = row.categoryReviewStatus ?? "auto";
+
   const needsReview =
+    (reviewStatus === "auto") &&
     row.categoryConfidence !== null &&
     row.categoryConfidence !== undefined &&
     Number(row.categoryConfidence) < 0.6;
+
+  const effectiveCategory = row.categoryOverride ?? row.category;
+
 
   const sp = new URLSearchParams();
   if (searchParams?.q) sp.set("q", searchParams.q);
@@ -153,8 +166,9 @@ export default async function EntryDetailPage(props: PageProps) {
         {row.category ? (
           <>
             <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Effective:</span>
               <span className="rounded-full border px-2 py-0.5 text-xs">
-                {row.category}
+                {effectiveCategory}
               </span>
 
               {needsReview ? (
@@ -164,9 +178,19 @@ export default async function EntryDetailPage(props: PageProps) {
               ) : null}
 
               {confidenceText ? (
-                <span className="text-xs text-slate-500">confidence {confidenceText}</span>
+                <span className="text-xs text-slate-500">
+                  confidence {confidenceText}
+                </span>
               ) : null}
             </div>
+
+            {/* Day 16: review + override controls */}
+            <CategoryReviewControls
+              entryId={row.id}
+              currentOverride={row.categoryOverride ?? null}
+              currentOverrideReason={row.categoryOverrideReason ?? null}
+              reviewStatus={row.categoryReviewStatus ?? null}
+            />
 
             {/* Day 14: provenance (diagnostic) */}
             {row.categoryModel || row.categoryVersion || row.categoryPromptVersion ? (
@@ -175,7 +199,6 @@ export default async function EntryDetailPage(props: PageProps) {
                 {row.categoryPromptVersion ? ` · Prompt: ${row.categoryPromptVersion}` : null}
               </p>
             ) : null}
-
 
             {row.categoryRationale ? (
               <p className="text-sm text-slate-700 whitespace-pre-wrap">

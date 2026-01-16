@@ -38,6 +38,13 @@ export type Entry = {
   createdAt?: string | Date;
   created_at?: string | Date;
 
+  // Day 13 + Day 16 (list triage)
+  categoryConfidence?: number | null;
+  categoryReviewStatus?: string | null;
+
+  // Day 16: effective category on list
+  categoryOverride?: string | null;
+
 };
 
 
@@ -57,6 +64,16 @@ export function EntryRow({
 
     return d.toLocaleString();
   }, [entry.createdAt, entry.created_at]);
+
+  const reviewStatus = entry.categoryReviewStatus ?? "auto";
+
+  const needsReview =
+    reviewStatus === "auto" &&
+    entry.categoryConfidence !== null &&
+    entry.categoryConfidence !== undefined &&
+    Number(entry.categoryConfidence) < 0.6;
+
+  const effectiveCategory = entry.categoryOverride ?? entry.category;
 
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(entry.title ?? "");
@@ -157,9 +174,15 @@ export function EntryRow({
                   </Link>
                 </h3>
 
-                {entry.category ? (
+                {effectiveCategory ? (
                   <span className="rounded-full border px-2 py-0.5 text-[11px] text-slate-700">
-                    {entry.category}
+                    {effectiveCategory}
+                  </span>
+                ) : null}
+
+                {needsReview ? (
+                  <span className="rounded-full border px-2 py-0.5 text-[11px] text-slate-500">
+                    Needs review
                   </span>
                 ) : null}
 

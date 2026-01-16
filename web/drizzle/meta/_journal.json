@@ -71,6 +71,13 @@
       "when": 1768325185797,
       "tag": "0009_rapid_mephistopheles",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1768587342090,
+      "tag": "0010_last_oracle",
+      "breakpoints": true
     }
   ]
 }
